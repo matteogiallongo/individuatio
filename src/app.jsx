@@ -1328,9 +1328,9 @@ function App() {
   const [section, setSection] = useState("home");
   const [hasKey, setHasKey] = useState(() => !!getApiKey());
   const [showSettings, setShowSettings] = useState(false);
-  if (!hasKey) return React.createElement(ApiKeyGate, { onSave: () => setHasKey(true) });
 
   // FIX #10: localStorage persistence per tutti i dati core
+  // ALL hooks must be declared before any conditional return (Rules of Hooks)
   const [dreams, setDreams] = useState(() => lsGet("ind_dreams", []));
   const [shadowJournal, setShadowJournal] = useState(() => lsGet("ind_shadow", []));
   const [myArchetypes, setMyArchetypes] = useState(() => lsGet("ind_archetypes", []));
@@ -1383,6 +1383,8 @@ function App() {
       default: return null;
     }
   };
+
+  if (!hasKey) return React.createElement(ApiKeyGate, { onSave: () => setHasKey(true) });
 
   return (
     <div style={{ fontFamily: "'Cormorant Garamond', serif", background: bg, minHeight: "100vh", color: textPrimary, display: "flex", flexDirection: "column", maxWidth: 680, margin: "0 auto" }}>
