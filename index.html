@@ -15,14 +15,29 @@
     html, body, #root { height: 100%; background: #07070f; }
     body { -webkit-tap-highlight-color: transparent; overflow: hidden; }
     #root { overflow-y: auto; height: 100dvh; }
+    #error-display { display:none; position:fixed; top:0; left:0; right:0; bottom:0; background:#07070f; color:#c8a84b; padding:20px; font-family:monospace; font-size:13px; overflow:auto; z-index:9999; white-space:pre-wrap; word-break:break-all; }
   </style>
 </head>
 <body>
   <div id="root"></div>
+  <div id="error-display"></div>
+  <script>
+    window.onerror = function(msg, src, line, col, err) {
+      var d = document.getElementById("error-display");
+      d.style.display = "block";
+      d.textContent = "JS ERROR:\n" + msg + "\nFile: " + src + "\nLine: " + line + "\n\n" + (err ? err.stack : "");
+      return false;
+    };
+    window.addEventListener("unhandledrejection", function(e) {
+      var d = document.getElementById("error-display");
+      d.style.display = "block";
+      d.textContent += "\nUNHANDLED PROMISE:\n" + e.reason;
+    });
+  </script>
 
   <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone@7.23.10/babel.min.js"></script>
 
   <script type="text/babel" data-presets="react">
     const { useState, useEffect, useRef } = React;
@@ -1341,8 +1356,6 @@ function ApiKeyGate({ onSave }) {
 
 function App() {
   const [section, setSection] = useState("home");
-  const [hasKey, setHasKey] = useState(() => !!getApiKey());
-  if (!hasKey) return React.createElement(ApiKeyGate, { onSave: () => setHasKey(true) });
   const [hasKey, setHasKey] = useState(() => !!getApiKey());
   if (!hasKey) return React.createElement(ApiKeyGate, { onSave: () => setHasKey(true) });
 
