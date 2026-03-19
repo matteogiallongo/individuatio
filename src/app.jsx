@@ -1,6 +1,20 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 
+class ErrorBoundary extends React.Component {
+  constructor(props) { super(props); this.state = { error: null }; }
+  static getDerivedStateFromError(e) { return { error: e }; }
+  render() {
+    if (this.state.error) {
+      return React.createElement('div', {
+        style: { padding: 24, fontFamily: 'monospace', background: '#07070f', minHeight: '100vh', color: '#c8a84b', whiteSpace: 'pre-wrap', wordBreak: 'break-all', fontSize: 13 }
+      }, 'RENDER ERROR:\n' + this.state.error.message + '\n\n' + this.state.error.stack);
+    }
+    return this.props.children;
+  }
+}
+
+
 
 // ================================================================
 // DESIGN TOKENS
@@ -23,47 +37,6 @@ const lsGet = (key, fallback) => {
 };
 const lsSet = (key, val) => { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} };
 
-// ================================================================
-// PSYCHIC CONTEXT — distills all user data into a personal summary
-// passed to every AI call so each section knows the full journey
-// ================================================================
-const buildPsychicContext = (dreams, shadowJournal, myArchetypes, individuationStage) => {
-  const parts = [];
-
-  // Stage
-  const stage = INDIVIDUATION_STAGES[individuationStage];
-  if (stage) parts.push(`FASE DI INDIVIDUAZIONE ATTUALE: ${stage.name} (${stage.short})`);
-
-  // Archetypes
-  if (myArchetypes.length > 0) {
-    const archNames = myArchetypes.map(id => {
-      const a = ARCHETYPES_DATA.find(x => x.id === id);
-      return a ? a.name : id;
-    }).join(", ");
-    parts.push(`ARCHETIPI DOMINANTI RICONOSCIUTI: ${archNames}`);
-  }
-
-  // Recent dreams (last 3)
-  if (dreams.length > 0) {
-    const recent = dreams.slice(0, 3);
-    const dreamSummaries = recent.map((d, i) =>
-      `Sogno ${i+1} (${d.date}): "${d.text.slice(0, 120)}${d.text.length > 120 ? '…' : ''}" — emozioni: ${d.emotions || 'non specificate'}`
-    ).join("\n");
-    parts.push(`SOGNI RECENTI REGISTRATI:\n${dreamSummaries}`);
-  }
-
-  // Shadow work (last 3 entries, just themes and key phrases)
-  if (shadowJournal.length > 0) {
-    const recent = shadowJournal.slice(0, 3);
-    const shadowSummaries = recent.map((e, i) =>
-      `Lavoro ombra ${i+1} — ${e.prompt.title}: "${e.response.slice(0, 100)}${e.response.length > 100 ? '…' : ''}"`
-    ).join("\n");
-    parts.push(`LAVORO SULL'OMBRA RECENTE:\n${shadowSummaries}`);
-  }
-
-  if (parts.length === 0) return "";
-  return `\n\n=== CONTESTO PSICHICO PERSONALE DELL'UTENTE ===\n${parts.join("\n\n")}\n=== FINE CONTESTO ===\n\nUsa questo contesto per personalizzare profondamente la tua risposta. Fai riferimento esplicito al materiale specifico dell'utente quando pertinente — sogni, temi dell'ombra, archetipi. Non essere generico: questa persona ha un percorso specifico.`;
-};
 
 // ================================================================
 // DATA
@@ -208,6 +181,49 @@ const IMAGINATION_FIGURES = [
 
 // 10 domande: 6 chiuse (scala) + 4 aperte (riflessione libera)
 // Il risultato viene analizzato da Claude, non calcolato a punti
+
+// ================================================================
+// PSYCHIC CONTEXT — distills all user data into a personal summary
+// passed to every AI call so each section knows the full journey
+// ================================================================
+const buildPsychicContext = (dreams, shadowJournal, myArchetypes, individuationStage) => {
+  const parts = [];
+
+  // Stage
+  const stage = INDIVIDUATION_STAGES[individuationStage];
+  if (stage) parts.push(`FASE DI INDIVIDUAZIONE ATTUALE: ${stage.name} (${stage.short})`);
+
+  // Archetypes
+  if (myArchetypes.length > 0) {
+    const archNames = myArchetypes.map(id => {
+      const a = ARCHETYPES_DATA.find(x => x.id === id);
+      return a ? a.name : id;
+    }).join(", ");
+    parts.push(`ARCHETIPI DOMINANTI RICONOSCIUTI: ${archNames}`);
+  }
+
+  // Recent dreams (last 3)
+  if (dreams.length > 0) {
+    const recent = dreams.slice(0, 3);
+    const dreamSummaries = recent.map((d, i) =>
+      `Sogno ${i+1} (${d.date}): "${d.text.slice(0, 120)}${d.text.length > 120 ? '…' : ''}" — emozioni: ${d.emotions || 'non specificate'}`
+    ).join("\n");
+    parts.push(`SOGNI RECENTI REGISTRATI:\n${dreamSummaries}`);
+  }
+
+  // Shadow work (last 3 entries, just themes and key phrases)
+  if (shadowJournal.length > 0) {
+    const recent = shadowJournal.slice(0, 3);
+    const shadowSummaries = recent.map((e, i) =>
+      `Lavoro ombra ${i+1} — ${e.prompt.title}: "${e.response.slice(0, 100)}${e.response.length > 100 ? '…' : ''}"`
+    ).join("\n");
+    parts.push(`LAVORO SULL'OMBRA RECENTE:\n${shadowSummaries}`);
+  }
+
+  if (parts.length === 0) return "";
+  return `\n\n=== CONTESTO PSICHICO PERSONALE DELL'UTENTE ===\n${parts.join("\n\n")}\n=== FINE CONTESTO ===\n\nUsa questo contesto per personalizzare profondamente la tua risposta. Fai riferimento esplicito al materiale specifico dell'utente quando pertinente — sogni, temi dell'ombra, archetipi. Non essere generico: questa persona ha un percorso specifico.`;
+};
+
 const QUIZ_QUESTIONS = [
   { type: "scale", q: "Come ti relazioni con i tuoi sogni?",
     opts: ["Li dimentico subito, raramente ci penso", "Li ricordo a volte ma non li esploro", "Li annoto e ci rifletto regolarmente", "Sono una fonte fondamentale — li analizzo come messaggi"] },
@@ -1452,4 +1468,4 @@ function App() {
 
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
-root.render(React.createElement(App));
+root.render(React.createElement(ErrorBoundary, null, React.createElement(App)));
