@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 
-const { useState, useEffect, useRef } = React;
-
 
 // ================================================================
 // DESIGN TOKENS
@@ -1450,9 +1448,6 @@ function App() {
   );
 }
 
-
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(React.createElement(App));
